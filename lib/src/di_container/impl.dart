@@ -1,4 +1,5 @@
 import 'package:dart_di/src/di_container/di_container.dart';
+import 'package:dart_di/src/di_container/storage/dependence.dart';
 import 'package:dart_di/src/di_container/storage/di_storage.dart';
 import 'package:dart_di/src/di_container/storage/di_storage_factory.dart';
 import 'package:dart_di/src/di_container/namespace.dart';
@@ -15,15 +16,15 @@ class DIContainerImpl implements DIContainer {
 
   @override
   void put<T>(T dependence, {Namespace namespace = Namespace.main}) {
-    _put<T>(dependence, namespace);
+    _put<T>(ValueDependence(dependence), namespace);
   }
 
   @override
   void lazyPut<T>(T Function() dependenceBuilder, {Namespace namespace = Namespace.main}) {
-    _put<T>(dependenceBuilder, namespace);
+    _put<T>(LazyDependence(dependenceBuilder), namespace);
   }
 
-  void _put<T>(dynamic dependence, Namespace namespace) {
+  void _put<T>(Dependence<T> dependence, Namespace namespace) {
     final storage = _namespaceStorageMap[namespace] ?? _factory.create();
     storage.add<T>(dependence);
     _namespaceStorageMap[namespace] = storage;
@@ -32,14 +33,14 @@ class DIContainerImpl implements DIContainer {
   @override
   T find<T>({Namespace namespace = Namespace.main}) {
     final storage = _getExistStorage<T>(namespace);
-    return storage.get<T>();
+    return storage.get<T>().value;
   }
 
   @override
   T? pop<T>({Namespace namespace = Namespace.main}) {
     final storage = _namespaceStorageMap[namespace];
     if(storage == null) return null;
-    return storage.pop<T>();
+    return storage.pop<T>()?.value;
   }
 
   @override
